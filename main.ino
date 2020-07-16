@@ -1,3 +1,5 @@
+// Timestamp: 20200715 2325
+
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
@@ -233,3 +235,5 @@ void move_stepper(int step_count, int direction) {
        
      }
 }
+
+// Authors: unknown, colbybhearn@gmail.com
