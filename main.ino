@@ -117,8 +117,11 @@ void index_handler() {
      "<head>"
      "<style>"
          ".lbtn {"
-           "display: block; width: 100%; border: 2px; padding: 100px 28px; font-size: 50px; text-align: center; margin:10px; background-color:#D3D3D3;"
+           "display: block; width: 100%; border: 2px; padding: 100px 28px; font-size: 50px; text-align: center; margin:10px; background-color:#79bbef;" 
            "}"
+         ".current {"
+            " background-color:#D3D3D3;" // turn the button for the current position gray (as if it's grayed out, even though it's not) 
+            "}"
        "</style>"
      "</head>"
      "<body>"
@@ -130,10 +133,10 @@ void index_handler() {
        "<script>"
          "let position = 'A';"
          "function valveOperation(operation) { fetch((operation == 'open' ? '/open' : '/close'));}"
-         "function setCurrent(id){ document.querySelectorAll('lbtn').classList.remove('current'); document.querySelectorAll('#'+id).classList.add('current'); }"
+         "function setCurrent(id){ document.querySelectorAll('lbtn').forEach((f)=>{f.classList.remove('current');}); document.querySelector('#'+id).classList.add('current'); }"
          "function moveToA(){ fetch('/toA').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnA');}).catch(function(error){console.log('error moving to A',  error.message)});}"
          "function moveToB(){ fetch('/toB').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnB');}).catch(function(error){console.log('error moving to B',  error.message)});}"
-         "function moveToB(){ fetch('/toC').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnC');}).catch(function(error){console.log('error moving to C',  error.message)});}"
+         "function moveToC(){ fetch('/toC').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnC');}).catch(function(error){console.log('error moving to C',  error.message)});}"
        "</script>"
      "</html>"
      "</body>";
@@ -168,7 +171,6 @@ void move_valve_A(){
    const char *open_json_resp = "{'position': 'A'}";
    server.send(200, "application/json", open_json_resp);
 }
-
 
 void move_valve_B(){
    int steps = getStepsToTarget(POS_B);
