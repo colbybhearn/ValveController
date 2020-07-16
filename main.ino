@@ -135,7 +135,7 @@ void index_handler() {
        "<script>"
          "let position = 'A';"
          "function valveOperation(operation) { fetch((operation == 'open' ? '/open' : '/close'));}"
-         "function setCurrent(id){ document.querySelectorAll('lbtn').forEach((f)=>{f.classList.remove('current');}); document.querySelector('#'+id).classList.add('current'); }"
+         "function setCurrent(id){ document.querySelectorAll('.current').forEach((f)=>{f.classList.remove('current');}); document.querySelector('#'+id).classList.add('current'); }"
          "function moveToA(){ fetch('/toA').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnA');}).catch(function(error){console.log('error moving to A',  error.message)});}"
          "function moveToB(){ fetch('/toB').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnB');}).catch(function(error){console.log('error moving to B',  error.message)});}"
          "function moveToC(){ fetch('/toC').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnC');}).catch(function(error){console.log('error moving to C',  error.message)});}"
