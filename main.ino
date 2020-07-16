@@ -94,9 +94,9 @@ void ap_init() {
    server.on("/health", health_check_handler);
    server.on("/open", open_valve_handler);
    server.on("/close", close_valve_handler);
-   server.on("/toA", move_valve_A)
-   server.on("/toB", move_valve_B)
-   server.on("/toC", move_valve_C)
+   server.on("/toA", move_valve_A);
+   server.on("/toB", move_valve_B);
+   server.on("/toC", move_valve_C);
 
    server.begin();
    Serial.println("HTTP server started");
@@ -117,9 +117,7 @@ void index_handler() {
      "<head>"
      "<style>"
          ".lbtn {"
-           "display: block; width: 100%; border: 2px; padding: 100px
-28px; font-size: 50px; text-align: center; margin:10px;
-background-color:#D3D3D3;"
+           "display: block; width: 100%; border: 2px; padding: 100px 28px; font-size: 50px; text-align: center; margin:10px; background-color:#D3D3D3;"
            "}"
        "</style>"
      "</head>"
@@ -164,7 +162,7 @@ int getDirectionToTarget(int target){
 
 void move_valve_A(){
    int steps = getStepsToTarget(POS_A);
-   int direction = getDirectionToTraget(POS_A);
+   int direction = getDirectionToTarget(POS_A);
    move_stepper(steps,direction);
    
    const char *open_json_resp = "{'position': 'A'}";
@@ -174,7 +172,7 @@ void move_valve_A(){
 
 void move_valve_B(){
    int steps = getStepsToTarget(POS_B);
-   int direction = getDirectionToTraget(POS_B);
+   int direction = getDirectionToTarget(POS_B);
    move_stepper(steps,direction);
    
    const char *open_json_resp = "{'position': 'B'}";
@@ -183,7 +181,7 @@ void move_valve_B(){
 
 void move_valve_C(){
    int steps = getStepsToTarget(POS_C);
-   int direction = getDirectionToTraget(POS_C);
+   int direction = getDirectionToTarget(POS_C);
    move_stepper(steps,direction);
    
    const char *open_json_resp = "{'position': 'C'}";
