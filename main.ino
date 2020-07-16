@@ -18,28 +18,30 @@ const char *VALVE_AP_PASSWORD = "password";
 // Baud rate for serial debugging
 const int DEBUG_SERIAL_BAUD = 115200;
 
-// The internal pin numbers differ from the actual pin numbers on the
-NodeMCU board
+// The internal pin numbers differ from the actual pin numbers on the NodeMCU board
 // The Dx numbers are what is actually on the NodeMCU board
 const int STEP_PIN = 12; // D6
 const int DIR_PIN = 13; // D7
 
-// The stepper driver (SparkFun Easy Driver) in this code utilizes a pin
-for changing the direction so
-// both the open and closed step values are the same. However other
-drivers use
+// The stepper driver (SparkFun Easy Driver) in this code utilizes a pin for changing the direction so
+// both the open and closed step values are the same. However other drivers use
 // a negative and non negative number to dictate stepper direction. So open
 // might be 1000 and close -1000
 
 const int STEP_POS_OPEN = 1000;
 const int STEP_POS_CLOSED = 1000;
 
+int POS_CURR = 0; // current valve position (unreliable until after initialization)
+const int POS_A = 0; // home 12 oclock
+const int POS_B = 550; // bottom right
+const int POS_C = 1100; // bottom left
+const int DIR_CCW = 1; // counter clockwise direction
+const int DIR_CW = 0; // clockwise direction
 
 // Global instance variables for web server and stepper interface
 ESP8266WebServer server(VALVE_WEBSERVER_PORT);
 
-// Global variable for containing status of valve. Once more stepper
-functionality is added
+// Global variable for containing status of valve. Once more stepper functionality is added
 // this would go in a sep class
 bool valve_open = true;
 
@@ -77,8 +79,7 @@ void loop() {
 
 }
 
-// All initialization for AP functionality lives below. Currently this
-is standard AP configuration.
+// All initialization for AP functionality lives below. Currently this is standard AP configuration.
 // Default IP address for the AP is 192.168.4.1 .This address is
 // not user configurable.
 void ap_init() {
@@ -93,6 +94,9 @@ void ap_init() {
    server.on("/health", health_check_handler);
    server.on("/open", open_valve_handler);
    server.on("/close", close_valve_handler);
+   server.on("/toA", move_valve_A)
+   server.on("/toB", move_valve_B)
+   server.on("/toC", move_valve_C)
 
    server.begin();
    Serial.println("HTTP server started");
@@ -100,31 +104,38 @@ void ap_init() {
 
 // Sets default position to open.
 void stepper_controller_init() {
-   move_stepper(STEP_POS_OPEN,1);
+   move_stepper(STEP_POS_OPEN,DIR_CCW); // counter clockwise
    valve_open = true;
+   POS_CURR = 0; // assert that we are home. 
 }
 
-// Handler for returning HTML and javascript that is rendered by the
-user in the browser to control the valve
+// Handler for returning HTML and javascript that is rendered by the user in the browser to control the valve
 void index_handler() {
    const char *web_page =
      "<!DOCTYPE html>"
      "<html>"
-     "<body>"
-       "<button class =\"lbtn\" type=\"button\"
-onclick=\"valveOperation('open')\">Open Valve</button>"
-       "<button class =\"lbtn\" type=\"button\"
-onclick=\"valveOperation('close')\">Close Valve</button>"
-       "<style>"
+     "<head>"
+     "<style>"
          ".lbtn {"
            "display: block; width: 100%; border: 2px; padding: 100px
 28px; font-size: 50px; text-align: center; margin:10px;
 background-color:#D3D3D3;"
            "}"
        "</style>"
+     "</head>"
+     "<body>"
+//       "<button class='lbtn' type='button' onclick='valveOperation('open')'>Open Valve</button>"
+//       "<button class='lbtn' type='button' onclick='valveOperation('close')'>Close Valve</button>"       
+      "<button id='btnA' class='lbtn' type='button' onclick='moveToA()'>Position A</button>"
+      "<button id='btnB' class='lbtn' type='button' onclick='moveToB()'>Position B</button>"
+      "<button id='btnC' class='lbtn' type='button' onclick='moveToC()'>Position C</button>"
        "<script>"
-         "function valveOperation(operation) { fetch((operation ==
-'open' ? '/open' : '/close'));}"
+         "let position = 'A';"
+         "function valveOperation(operation) { fetch((operation == 'open' ? '/open' : '/close'));}"
+         "function setCurrent(id){ document.querySelectorAll('lbtn').classList.remove('current'); document.querySelectorAll('#'+id).classList.add('current'); }"
+         "function moveToA(){ fetch('/toA').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnA');}).catch(function(error){console.log('error moving to A',  error.message)});}"
+         "function moveToB(){ fetch('/toB').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnB');}).catch(function(error){console.log('error moving to B',  error.message)});}"
+         "function moveToB(){ fetch('/toC').then(response => response.json()).then(function(data) { alert(data.position); position = data.position; setCurrent('btnC');}).catch(function(error){console.log('error moving to C',  error.message)});}"
        "</script>"
      "</html>"
      "</body>";
@@ -132,44 +143,93 @@ background-color:#D3D3D3;"
   server.send(200,"text/html",web_page);
 }
 
-// Generic health check endpoint you can check to get a response from
-the NodeMCU
+// Generic health check endpoint you can check to get a response from the NodeMCU
 // Additional watchdog logic can go here
 void health_check_handler() {
-   const char *health_json_resp = "{\"status\": \"ok\"}";
+   const char *health_json_resp = "{'status': 'ok'}";
    server.send(200,"application/json", health_json_resp);
 }
+
+int getStepsToTarget(int target){
+   if(POS_CURR > target)
+      return POS_CURR-target;
+   return target-POS_CURR;
+}
+
+int getDirectionToTarget(int target){
+   if(POS_CURR > target)
+      return DIR_CCW;
+   return DIR_CW;
+}
+
+void move_valve_A(){
+   int steps = getStepsToTarget(POS_A);
+   int direction = getDirectionToTraget(POS_A);
+   move_stepper(steps,direction);
+   
+   const char *open_json_resp = "{'position': 'A'}";
+   server.send(200, "application/json", open_json_resp);
+}
+
+
+void move_valve_B(){
+   int steps = getStepsToTarget(POS_B);
+   int direction = getDirectionToTraget(POS_B);
+   move_stepper(steps,direction);
+   
+   const char *open_json_resp = "{'position': 'B'}";
+   server.send(200, "application/json", open_json_resp);
+}
+
+void move_valve_C(){
+   int steps = getStepsToTarget(POS_C);
+   int direction = getDirectionToTraget(POS_C);
+   move_stepper(steps,direction);
+   
+   const char *open_json_resp = "{'position': 'C'}";
+   server.send(200, "application/json", open_json_resp);
+}
+
 
 // If global valve status is close, it moves stepper to the OPEN step count
 // and returns a successful json message.
 void open_valve_handler() {
    if (!valve_open) {
-      move_stepper(STEP_POS_OPEN,1);
+      move_stepper(STEP_POS_OPEN,DIR_CCW);
       valve_open = true;
    }
 
-   const char *open_json_resp = "{\"position\": \"open\"}";
+   const char *open_json_resp = "{'position': 'open'}";
    server.send(200, "application/json", open_json_resp);
 }
 
 // Same as above, but for closed.
 void close_valve_handler() {
    if(valve_open) {
-       move_stepper(STEP_POS_CLOSED,0);
+       move_stepper(STEP_POS_CLOSED,DIR_CW);
       valve_open = false;
    }
 
-   const char *closed_json_resp = "{\"position\": \"closed\"}";
+   const char *closed_json_resp = "{'position': 'closed'}";
    server.send(200, "application/json", closed_json_resp);
 }
 
-// Step count is how many full steps you want to move and direction is
-either 1 or 0
+
+
+// Step count is how many full steps you want to move and direction is either 1 or 0
 void move_stepper(int step_count, int direction) {
-   digitalWrite(DIR_PIN, direction ? 1 : 0);
+   digitalWrite(DIR_PIN, direction ? DIR_CCW : DIR_CW);
+   int stepDelta = 1;
+   if(direction == DIR_CCW)
+      stepDelta *= -1;
+
      for(int i = 0; i < step_count ; i++) {
+       
        digitalWrite(STEP_PIN,LOW);
        delay(1);
        digitalWrite(STEP_PIN,HIGH);
+       
+          POS_CURR += stepDelta; // record progress in the desired direction
+       
      }
 }
