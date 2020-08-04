@@ -39,6 +39,7 @@ const int POS_B = 550; // bottom right
 const int POS_C = 1100; // bottom left
 const int DIR_CCW = 1; // counter clockwise direction
 const int DIR_CW = 0; // clockwise direction
+const char *MODE = "idle";
 
 // Global instance variables for web server and stepper interface
 ESP8266WebServer server(VALVE_WEBSERVER_PORT);
@@ -96,6 +97,9 @@ void ap_init() {
    server.on("/health", health_check_handler);
    server.on("/open", open_valve_handler);
    server.on("/close", close_valve_handler);
+   server.on("/startTest", startTest);
+   server.on("/stopTest", stopTest);
+   server.on("/getStatus", getStatus);
    server.on("/toA", move_valve_A);
    server.on("/toB", move_valve_B);
    server.on("/toC", move_valve_C);
@@ -130,18 +134,25 @@ void index_handler() {
        "</style>"
      "</head>"
      "<body>"
-      "<span id='pos' class='label' ></span>"
+      "<span id='status' class='label' ></span>"
+      "<span id='pos' class='label' ></span>"      
+      "<button id='btnTest' class='lbtn' type='button' onclick='startTest()'>Test Mode</button>"
       "<button id='btnA' class='lbtn' type='button' onclick='moveToA()'>Position A</button>"
       "<button id='btnB' class='lbtn' type='button' onclick='moveToB()'>Position B</button>"
       "<button id='btnC' class='lbtn' type='button' onclick='moveToC()'>Position C</button>"
        "<script>"
-         "let position = 'A';"
+         "let position = 'A';"         
          "function valveOperation(operation) { fetch((operation == 'open' ? '/open' : '/close'));}"
-         "function setLabel(text) { document.querySelector('#pos').innerText = text }"
+         "function setPosLabel(text) { document.querySelector('#pos').innerText = text }"
+         "function setStatusLabel(text) { document.querySelector('#status').innerText = text }"
          "function setCurrent(id){ document.querySelectorAll('.current').forEach((f)=>{f.classList.remove('current');}); document.querySelector('#'+id).classList.add('current'); }"
-         "function moveToA(){ fetch('/toA').then(response => response.json()).then(function(data) { setLabel(data.position); position = data.position; setCurrent('btnA');}).catch(function(error){console.log('error moving to A',  error.message)});}"
-         "function moveToB(){ fetch('/toB').then(response => response.json()).then(function(data) { setLabel(data.position); position = data.position; setCurrent('btnB');}).catch(function(error){console.log('error moving to B',  error.message)});}"
-         "function moveToC(){ fetch('/toC').then(response => response.json()).then(function(data) { setLabel(data.position); position = data.position; setCurrent('btnC');}).catch(function(error){console.log('error moving to C',  error.message)});}"
+         "function moveToA(){ fetch('/toA').then(response => response.json()).then(function(data) { setPosLabel(data.position); position = data.position; setCurrent('btnA');}).catch(function(error){console.log('error moving to A',  error.message)});}"
+         "function moveToB(){ fetch('/toB').then(response => response.json()).then(function(data) { setPosLabel(data.position); position = data.position; setCurrent('btnB');}).catch(function(error){console.log('error moving to B',  error.message)});}"
+         "function moveToC(){ fetch('/toC').then(response => response.json()).then(function(data) { setPosLabel(data.position); position = data.position; setCurrent('btnC');}).catch(function(error){console.log('error moving to C',  error.message)});}"
+         "function startTest(){ fetch('/startTest').then(response => response.json()).then(function(data) { setStatusLabel('starting test'); setTimeout(update, 1000); }).catch(function(error){console.log('error displaying testing status',  error.message)});}"
+         "function startTest(){ fetch('/stopTest').then(response => response.json()).then(function(data) { setStatusLabel('stopping test'); }).catch(function(error){console.log('error displaying testing status',  error.message)});}"
+         "function update(){ fetch('/getStatus').then(response => response.json()).then(function(data) { if(data.mode === 'test') processUpdate_TestMode(data); if(data.mode !== 'idle') setTimeout(update, 1000); }).catch(function(error){console.log('error displaying testing status',  error.message)});}"
+         "function processUpdate_TestMode(data){ setStatusLabel('testing' + data.stepsRemaining); }"
        "</script>"
      "</html>"
      "</body>";
@@ -166,6 +177,47 @@ int getDirectionToTarget(int target){
    if(POS_CURR > target)
       return DIR_CCW;
    return DIR_CW;
+}
+
+
+void startTest(){
+   MODE = "test";
+   const char *open_json_resp = "{'mode': '"+MODE+"'}";
+   server.send(200, "application/json", open_json_resp);
+   
+   // I need to run the test.  
+   // I need to know where to tie into an infinite loop
+   // I need to know how to properly sleep through the loop
+      
+   // start tracking test position
+   // while in test mode
+      // target next test position
+      // delay 1000
+      // advance test position
+   
+   // finally, set the mode back to idle
+   MODE = "idle";
+   
+   //   int steps = getStepsToTarget(POS_A);
+   // int direction = getDirectionToTarget(POS_A);
+   // move_stepper(steps,direction);     
+}
+
+void getStatus(){   
+   // if we're in test mode,
+      // return getTestStatus();
+   
+   // return getIdleStatus();
+}
+
+void getTestStatus(){
+   const char *open_json_resp = "{'mode': '"+MODE+"'}";
+   server.send(200, "application/json", open_json_resp);   
+}
+
+void getIdleStatus(){
+   const char *open_json_resp = "{'mode': '"+MODE+"'}";
+   server.send(200, "application/json", open_json_resp);   
 }
 
 void move_valve_A(){
