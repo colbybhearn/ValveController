@@ -153,9 +153,9 @@ void index_handler() {
       "<span id='status' class='label' ></span>"
       "<span id='pos' class='label' ></span>"      
       "<button id='btnTest' class='lbtn' type='button' onclick='toggleTest()'>Run Test</button>"
-      "<button id='btnA' class='lbtn' type='button' onclick='moveToA()'>Position A</button>"
-      "<button id='btnB' class='lbtn' type='button' onclick='moveToB()'>Position B</button>"
-      "<button id='btnC' class='lbtn' type='button' onclick='moveToC()'>Position C</button>"
+      "<button id='btnA' class='lbtn' type='button' onclick='moveToA()'>-O2</button>"
+      "<button id='btnB' class='lbtn' type='button' onclick='moveToB()'>Room Air</button>"
+      "<button id='btnC' class='lbtn' type='button' onclick='moveToC()'>+O2</button>"
        "<script>"
          "let position = 'A';"         
          "let mode = 'idle'; "
@@ -262,7 +262,7 @@ void move_valve_A(){
    int direction = getDirectionToTarget(POS_A);
    move_stepper(steps,direction);
    
-   const char *open_json_resp = "{\"position\": \"A\"}";
+   const char *open_json_resp = "{\"position\": \"-O2\"}";
    server.send(200, "application/json", open_json_resp);
 }
 
@@ -271,7 +271,7 @@ void move_valve_B(){
    int direction = getDirectionToTarget(POS_B);
    move_stepper(steps,direction);
    
-   const char *open_json_resp = "{\"position\": \"B\"}";
+   const char *open_json_resp = "{\"position\": \"Room Air\"}";
    server.send(200, "application/json", open_json_resp);
 }
 
@@ -280,7 +280,7 @@ void move_valve_C(){
    int direction = getDirectionToTarget(POS_C);
    move_stepper(steps,direction);
    
-   const char *open_json_resp = "{\"position\": \"C\"}";
+   const char *open_json_resp = "{\"position\": \"+O2\"}";
    server.send(200, "application/json", open_json_resp);
 }
 
