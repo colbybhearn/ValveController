@@ -6,8 +6,8 @@
 
 // Wifi network name and password for the NodeMCU valve control board
 #ifndef APSSID
-#define APSSID "Lost Crack"
-#define APPSK  "likeaboss"
+#define APSSID "Test123"
+#define APPSK  "password"
 #endif
 
 // Port for the NodeMCU webserver - 80 is standard HTTP port
@@ -87,14 +87,15 @@ void loop() {
       server.handleClient();
     //else
     //{
-     // if(MODE=='test'){
-     //   testLoop()
-     // }
+    //  if(MODE=='test'){
+    //    testLoop()
+    //  }
     //}
 
 }
 
 void testLoop(){
+  //if(testNextPos)
 }
 
 // All initialization for AP functionality lives below. Currently this is standard AP configuration.
@@ -151,7 +152,7 @@ void index_handler() {
      "<body>"
       "<span id='status' class='label' ></span>"
       "<span id='pos' class='label' ></span>"      
-      "<button id='btnTest' class='lbtn' type='button' onclick='toggleTest()'>Test Mode</button>"
+      "<button id='btnTest' class='lbtn' type='button' onclick='toggleTest()'>Run Test</button>"
       "<button id='btnA' class='lbtn' type='button' onclick='moveToA()'>Position A</button>"
       "<button id='btnB' class='lbtn' type='button' onclick='moveToB()'>Position B</button>"
       "<button id='btnC' class='lbtn' type='button' onclick='moveToC()'>Position C</button>"
@@ -166,7 +167,7 @@ void index_handler() {
          "function moveToB(){ fetch('/toB').then(response => response.json()).then(function(data) { setPosLabel(data.position); position = data.position; setCurrent('btnB');}).catch(function(error){console.log('error moving to B',  error.message)});} \r\n"
          "function moveToC(){ fetch('/toC').then(response => response.json()).then(function(data) { setPosLabel(data.position); position = data.position; setCurrent('btnC');}).catch(function(error){console.log('error moving to C',  error.message)});} \r\n"
          "function toggleTest(){ if(mode==='idle') { startTest(); } else if(mode==='test') { stopTest(); } } \r\n"
-         "function startTest(){ fetch('/startTest').then(response => response.json()).then(function(data) { setStatusLabel('starting test'); setTimeout(update, 1000); }).catch(function(error){console.log('error displaying testing status',  error.message)});} \r\n"
+         "function startTest(){ fetch('/startTest').then(response => response.json()).then(function(data) { setStatusLabel('Testing');  }).catch(function(error){console.log('error displaying testing status',  error.message)});} \r\n"
          "function stopTest(){ fetch('/stopTest').then(response => response.json()).then(function(data) { setStatusLabel('stopping test'); }).catch(function(error){console.log('error displaying testing status',  error.message)});} \r\n"
          "function update(){ fetch('/getStatus').then(response => response.json()).then(function(data) { processStatus(data)  }).catch(function(error){console.log('error displaying testing status',  error.message)});} \r\n"
          "function processStatus(data) { console.log(data); mode = data.mode; if(mode === 'test') processUpdate_TestMode(data); if(data.mode !== 'idle') setTimeout(update, 1000); } \r\n"
@@ -210,13 +211,13 @@ void startTest(){
    // start tracking test position
    // while in test mode
    int i =0;
-   for(i=0;i<2;i++){
-    if(MODE == "idle")
-      i=10;
+   for(i=0;i<1872;i++){    
     move_valve_A();
-    delay(1000);
+    delay(200);
     move_valve_B();
-    delay(1000);
+    delay(200);    
+    move_valve_C();
+    delay(200);
    }
       // target next test position
       // delay 1000
